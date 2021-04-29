@@ -51,7 +51,7 @@ public class SaveSlime extends ApplicationAdapter {
 		screenHeight    = Gdx.graphics.getHeight();
 
 		// Slime
-		slimeX          = screenWidth/4;
+		slimeX          = screenWidth/5;
 		slimeY          = screenHeight/2;
 		slimeWidth      = screenWidth/10;
 		slimeHeight     = screenHeight/5;
@@ -74,8 +74,23 @@ public class SaveSlime extends ApplicationAdapter {
 				break;
 			case playing:
 				if(slimeY > 0){
-					slimeVelocity += gravity;
-					slimeY = slimeY - slimeVelocity;
+					if(slimeY > screenHeight - slimeHeight){
+						slimeY = screenHeight - slimeHeight;
+					} else {
+						slimeVelocity += gravity;
+						slimeY = slimeY - slimeVelocity;
+					}
+
+				} else {
+					gameState = GameState.gameOver;
+				}
+				if(Gdx.input.justTouched()){
+					if(slimeY > screenHeight - slimeHeight){
+						slimeVelocity = 8;
+					}else {
+						slimeVelocity = -8;
+					}
+
 				}
 				break;
 			case gameOver:

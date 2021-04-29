@@ -30,6 +30,8 @@ public class SaveSlime extends ApplicationAdapter {
 		gameOver
 	}
 	GameState gameState;
+	float slimeVelocity = 8;
+	float gravity = 0.2f;
 
 
 
@@ -66,8 +68,15 @@ public class SaveSlime extends ApplicationAdapter {
 
 		switch (gameState){
 			case idle:
+				if(Gdx.input.justTouched()){
+					gameState = GameState.playing;
+				}
 				break;
 			case playing:
+				if(slimeY > 0){
+					slimeVelocity += gravity;
+					slimeY = slimeY - slimeVelocity;
+				}
 				break;
 			case gameOver:
 				break;

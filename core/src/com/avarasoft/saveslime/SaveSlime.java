@@ -6,6 +6,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Intersector;
 
 import java.util.Random;
 
@@ -20,11 +23,19 @@ public class SaveSlime extends ApplicationAdapter {
 	Texture background;
 	Random random;
 
+	Circle slimeCircle;
+	Circle[] enemyCircle1;
+	Circle[] enemyCircle2;
+	Circle[] enemyCircle3;
+	Circle[] enemyCircle4;
+
+
 	// Slime
 	float slimeX = 0;
 	float slimeY = 0;
 	float slimeWidth;
 	float slimeHeight;
+	float jumpVelocity;
 
 	// Enemy Slime
 	int numberOfEnemies = 4;
@@ -36,6 +47,7 @@ public class SaveSlime extends ApplicationAdapter {
 	float distanceBetweenEnemies;
 	float enemySlimeWidth;
 	float enemySlimeHeight;
+	int passedEnemy;
 
 	// Screen
 	int screenWidth;
@@ -54,13 +66,19 @@ public class SaveSlime extends ApplicationAdapter {
 	int score = 0;
 	BitmapFont gameOverText;
 	BitmapFont scoreText;
+	int numberOfCollision = 0;
+
+	Boolean collision1 = false;
+	Boolean collision2 = false;
+	Boolean collision3 = false;
+	Boolean collision4 = false;
 
 
 
 	@Override
 	public void create () {
 		// Initialize
-		batch = new SpriteBatch();
+		batch           = new SpriteBatch();
 
 		slime           = new Texture("slime.png");
 		background      = new Texture("background.png");
@@ -68,7 +86,14 @@ public class SaveSlime extends ApplicationAdapter {
 		enemySlime2     = new Texture("enemy.png");
 		enemySlime3     = new Texture("enemy.png");
 		enemySlime4     = new Texture("enemy.png");
-		random = new Random();
+		slimeCircle     = new Circle();
+		enemyCircle1    = new Circle[numberOfEnemies];
+		enemyCircle2    = new Circle[numberOfEnemies];
+		enemyCircle3    = new Circle[numberOfEnemies];
+		enemyCircle4    = new Circle[numberOfEnemies];
+
+		random          = new Random();
+
 
 		// Screen
 		screenWidth     = Gdx.graphics.getWidth();
@@ -77,19 +102,15 @@ public class SaveSlime extends ApplicationAdapter {
 		// Game
 		gameState = GameState.idle;
 
-		gameOverText = new BitmapFont();
+		gameOverText    = new BitmapFont();
 		gameOverText.setColor(Color.WHITE);
 		gameOverText.getData().setScale(5);
 
-		scoreText = new BitmapFont();
+		scoreText       = new BitmapFont();
 		scoreText.setColor(Color.WHITE);
 		scoreText.getData().setScale(4);
 
-
-
-
 		initializeVariables();
-		enemyLoop();
 
 	}
 
@@ -99,27 +120,39 @@ public class SaveSlime extends ApplicationAdapter {
 		slimeY          = screenHeight/2;
 		slimeWidth      = screenWidth/10;
 		slimeHeight     = screenHeight/5;
+		jumpVelocity    = -8;
 
 		// Enemy
 		distanceBetweenEnemies = screenWidth/2;
 		enemySlimeWidth = 2*slimeWidth/5;
 		enemySlimeHeight = 2*slimeHeight/5;
+		passedEnemy = 0;
+
+		for(int i = 0; i<numberOfEnemies; i++){
+			enemyX[i] = screenWidth + i*distanceBetweenEnemies;
+
+			enemyOffset1[i] = repositionEnemiesOnYAxis();
+			enemyOffset2[i] = repositionEnemiesOnYAxis();
+			enemyOffset3[i] = repositionEnemiesOnYAxis();
+			enemyOffset4[i] = repositionEnemiesOnYAxis();
+
+			enemyCircle1[i] = new Circle();
+			enemyCircle2[i] = new Circle();
+			enemyCircle3[i] = new Circle();
+			enemyCircle4[i] = new Circle();
+		}
+
 
 
 		// Game
-		score = 0;
-		slimeVelocity = 8;
+		score              = 0;
+		slimeVelocity      = 8;
 		enemySlimeVelocity = 3;
+		numberOfCollision  = 0;
 
 	}
-	public void enemyLoop(){
-		for(int i = 0; i<numberOfEnemies; i++){
-			enemyX[i] = screenWidth + i*distanceBetweenEnemies;
-			enemyOffset1[i] =(random.nextFloat()) * (screenHeight/2 - enemySlimeHeight);
-			enemyOffset2[i] =(random.nextFloat()) * (screenHeight/2 - enemySlimeHeight);
-			enemyOffset3[i] =screenHeight/2 + (random.nextFloat()) * (screenHeight/2 - enemySlimeHeight);
-			enemyOffset4[i] =screenHeight/2 + (random.nextFloat()) * (screenHeight/2 - enemySlimeHeight);
-		}
+	public float repositionEnemiesOnYAxis(){
+		return slimeHeight + (random.nextFloat()) * (screenHeight/2);
 	}
 
 	@Override
@@ -135,9 +168,34 @@ public class SaveSlime extends ApplicationAdapter {
 				}
 				break;
 			case playing:
+
+				if(enemyX[passedEnemy] < (slimeX - (slimeWidth/2))){
+					score++;
+					collision1 = false;
+					collision2 = false;
+					collision3 = false;
+					collision4 = false;
+					if(passedEnemy < (numberOfEnemies -1)){
+						passedEnemy++;
+					} else {
+						passedEnemy = 0;
+					}
+
+				}
+
 				for(int i = 0; i<numberOfEnemies; i++){
 					if(enemyX[i] < -enemySlimeWidth){
-						enemyX[i]= numberOfEnemies*distanceBetweenEnemies;
+						enemyX[i]       = numberOfEnemies*distanceBetweenEnemies;
+						enemyOffset1[i] = repositionEnemiesOnYAxis();
+						enemyOffset2[i] = repositionEnemiesOnYAxis();
+						enemyOffset3[i] = repositionEnemiesOnYAxis();
+						enemyOffset4[i] = repositionEnemiesOnYAxis();
+						/*
+						enemyOffset1[i] = slimeHeight + (random.nextFloat()) * (screenHeight/2);
+						enemyOffset2[i] = slimeHeight + (random.nextFloat()) * (screenHeight/2);
+						enemyOffset3[i] = screenHeight/2 + (random.nextFloat()) * (screenHeight/2 - slimeHeight);
+						enemyOffset4[i] = screenHeight/2 + (random.nextFloat()) * (screenHeight/2 - slimeHeight);
+						 */
 					} else {
 						enemyX[i] = enemyX[i] - enemySlimeVelocity;
 					}
@@ -145,6 +203,11 @@ public class SaveSlime extends ApplicationAdapter {
 					batch.draw(enemySlime2, enemyX[i], enemyOffset2[i], enemySlimeWidth, enemySlimeHeight);
 					batch.draw(enemySlime3, enemyX[i], enemyOffset3[i], enemySlimeWidth, enemySlimeHeight);
 					batch.draw(enemySlime4, enemyX[i], enemyOffset4[i], enemySlimeWidth, enemySlimeHeight);
+
+					enemyCircle1[i] = new Circle(enemyX[i] + enemySlimeWidth/2, enemyOffset1[i] + enemySlimeHeight/2, 2*enemySlimeWidth/5);
+					enemyCircle2[i] = new Circle(enemyX[i] + enemySlimeWidth/2, enemyOffset2[i] + enemySlimeHeight/2, 2*enemySlimeWidth/5);
+					enemyCircle3[i] = new Circle(enemyX[i] + enemySlimeWidth/2, enemyOffset3[i] + enemySlimeHeight/2, 2*enemySlimeWidth/5);
+					enemyCircle4[i] = new Circle(enemyX[i] + enemySlimeWidth/2, enemyOffset4[i] + enemySlimeHeight/2, 2*enemySlimeWidth/5);
 				}
 				if(slimeY > 0){
 					if(slimeY > (screenHeight - slimeHeight)){
@@ -158,23 +221,49 @@ public class SaveSlime extends ApplicationAdapter {
 					gameState = GameState.gameOver;
 				}
 				if(Gdx.input.justTouched()){
-						slimeVelocity = -8;
+						slimeVelocity = jumpVelocity;
 				}
 				break;
 			case gameOver:
 				gameOverText.draw(batch,"Game Over ! \nTap to Play Again ?", screenWidth/3  , screenHeight/2);
 				if(Gdx.input.justTouched()){
 					initializeVariables();
-					enemyLoop();
 					gameState = GameState.playing;
 				}
 
 				break;
 		}
 		batch.draw(slime, slimeX, slimeY, slimeWidth, slimeHeight);
-
-
 		batch.end();
+
+		slimeCircle = new Circle(slimeX + slimeWidth/2, slimeY + slimeHeight/2, 2*slimeWidth/5);
+
+		for(int i = 0; i<numberOfEnemies; i++){
+			if(Intersector.overlaps(slimeCircle, enemyCircle1[i]) && !collision1){
+				numberOfCollision++;
+				slimeWidth  = slimeWidth + slimeWidth/10;
+				slimeHeight = slimeHeight + slimeHeight/10;
+				collision1  = true;
+			} else if(Intersector.overlaps(slimeCircle, enemyCircle2[i]) && !collision2){
+				numberOfCollision++;
+				slimeWidth  = slimeWidth + slimeWidth/10;
+				slimeHeight = slimeHeight + slimeHeight/10;
+				collision2  = true;
+			} else if(Intersector.overlaps(slimeCircle, enemyCircle3[i]) && !collision3){
+				numberOfCollision++;
+				slimeWidth  = slimeWidth + slimeWidth/10;
+				slimeHeight = slimeHeight + slimeHeight/10;
+				collision3  = true;
+			} else if(Intersector.overlaps(slimeCircle, enemyCircle4[i]) && !collision4){
+				numberOfCollision++;
+				slimeWidth  = slimeWidth + slimeWidth/10;
+				slimeHeight = slimeHeight + slimeHeight/10;
+				collision4  = true;
+			}
+		}
+		if(numberOfCollision > 3){
+			gameState = GameState.gameOver;
+		}
 	}
 	
 	@Override

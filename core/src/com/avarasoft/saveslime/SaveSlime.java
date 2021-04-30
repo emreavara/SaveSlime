@@ -21,6 +21,7 @@ public class SaveSlime extends ApplicationAdapter {
 	Texture enemySlime3;
 	Texture enemySlime4;
 	Texture background;
+	Texture burstSlime;
 	Random random;
 
 	Circle slimeCircle;
@@ -86,6 +87,7 @@ public class SaveSlime extends ApplicationAdapter {
 		enemySlime2     = new Texture("enemy.png");
 		enemySlime3     = new Texture("enemy.png");
 		enemySlime4     = new Texture("enemy.png");
+		burstSlime      = new Texture("burst.png");
 		slimeCircle     = new Circle();
 		enemyCircle1    = new Circle[numberOfEnemies];
 		enemyCircle2    = new Circle[numberOfEnemies];
@@ -163,12 +165,13 @@ public class SaveSlime extends ApplicationAdapter {
 
 		switch (gameState){
 			case idle:
+				batch.draw(slime, slimeX, slimeY, slimeWidth, slimeHeight);
 				if(Gdx.input.justTouched()){
 					gameState = GameState.playing;
 				}
 				break;
 			case playing:
-
+				batch.draw(slime, slimeX, slimeY, slimeWidth, slimeHeight);
 				if(enemyX[passedEnemy] < (slimeX - (slimeWidth/2))){
 					score++;
 					collision1 = false;
@@ -225,7 +228,9 @@ public class SaveSlime extends ApplicationAdapter {
 				}
 				break;
 			case gameOver:
+				batch.draw(burstSlime, slimeX, slimeY, slimeWidth, slimeHeight);
 				gameOverText.draw(batch,"Game Over ! \nTap to Play Again ?", screenWidth/3  , screenHeight/2);
+
 				if(Gdx.input.justTouched()){
 					initializeVariables();
 					gameState = GameState.playing;
@@ -233,7 +238,7 @@ public class SaveSlime extends ApplicationAdapter {
 
 				break;
 		}
-		batch.draw(slime, slimeX, slimeY, slimeWidth, slimeHeight);
+
 		batch.end();
 
 		slimeCircle = new Circle(slimeX + slimeWidth/2, slimeY + slimeHeight/2, 2*slimeWidth/5);
@@ -263,6 +268,7 @@ public class SaveSlime extends ApplicationAdapter {
 		}
 		if(numberOfCollision > 3){
 			gameState = GameState.gameOver;
+
 		}
 	}
 	
